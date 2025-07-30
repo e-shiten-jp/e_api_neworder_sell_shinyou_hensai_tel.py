@@ -22,8 +22,10 @@
 # 注文数量: my_sOrderSuryou
 # 建日種類: my_sTatebiType  （このサンプルコードでは、2:建日順、3:単価益順、4:単価損順 のみ指定可能。）
 #
+#
 # 利用方法: 
-# 事前に「e_api_login_tel.py」を実行して、仮想URL（1日券）等を取得しておいてください。
+# 事前に「e_api_login_tel.py」を実行して、
+# 仮想URL（1日券）等を取得しておいてください。
 #
 #
 # == ご注意: ========================================
@@ -248,6 +250,29 @@ def func_read_from_file(str_fname):
         print(type(e))
 
 
+# 機能: class_req型データをjson形式の文字列に変換する。
+# 返値: json形式の文字
+# 第１引数： class_req型データ
+def func_make_json_format(work_class_req):
+    work_key = ''
+    work_value = ''
+    str_json_data =  '{\n\t'
+    for i in range(len(work_class_req)) :
+        work_key = func_strip_dquot(work_class_req[i].str_key)
+        if len(work_key) > 0:
+            if work_key[:1] == 'a' :
+                work_value = work_class_req[i].str_value
+                str_json_data = str_json_data + work_class_req[i].str_key \
+                                    + ':' + func_strip_dquot(work_value) \
+                                    + ',\n\t'
+            else :
+                work_value = func_check_json_dquat(work_class_req[i].str_value)
+                str_json_data = str_json_data + func_check_json_dquat(work_class_req[i].str_key) \
+                                    + ':' + work_value \
+                                    + ',\n\t'
+    str_json_data = str_json_data[:-3] + '\n}'
+    return str_json_data
+
 
 # 機能： API問合せ文字列を作成し返す。
 # 戻り値： api問合せのurl文字列
@@ -290,18 +315,6 @@ def func_api_req(str_url):
     json_req = json.loads(str_shiftjis)
 
     return json_req
-
-
-# 機能: class_req型データをjson形式の文字列に変換する。
-# 返値: json形式の文字
-# 第１引数： class_req型データ
-def func_make_json_format(work_class_req):
-    str_json_data =  '{\n\t'
-    for i in range(len(work_class_req)) :
-        if len(work_class_req[i].str_key) > 0:
-            str_json_data = str_json_data + work_class_req[i].str_key + ':' + work_class_req[i].str_value + ',\n\t'
-    str_json_data = str_json_data[:-3] + '\n}'
-    return str_json_data
 
 
 # 機能： アカウント情報をファイルから取得する
@@ -390,11 +403,14 @@ def func_write_to_file(str_fname_output, str_data):
 # 引数2: 保存するp_no
 # 備考:
 def func_save_p_no(str_fname_output, int_p_no):
-    # "p_no"を保存する。
-    str_info_p_no = '{\n'
-    str_info_p_no = str_info_p_no + '\t' + '"p_no":"' + str(int_p_no) + '"\n'
-    str_info_p_no = str_info_p_no + '}\n'
-    func_write_to_file(str_fname_output, str_info_p_no)
+    req_item = [class_req()]
+    str_key = '"p_no"'
+    str_value = func_check_json_dquat(str(int_p_no))
+    #req_item.append(class_req())
+    req_item[-1].add_data(str_key, str_value)
+
+    str_json_p_no = func_make_json_format(req_item)
+    func_write_to_file(str_fname_output, str_json_p_no)
     print('現在の"p_no"を保存しました。 p_no =', int_p_no)            
     print('ファイル名:', str_fname_output)
 
